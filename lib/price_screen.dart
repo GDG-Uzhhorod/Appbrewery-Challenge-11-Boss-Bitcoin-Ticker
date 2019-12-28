@@ -55,14 +55,7 @@ class _PriceScreenState extends State<PriceScreen> {
             child: DropdownButton<String>(
               value: selectedCurrency,
               items: [
-                DropdownMenuItem(
-                  child: Text(currenciesList.first),
-                  value: currenciesList.first,
-                ),
-                DropdownMenuItem(
-                  child: Text(currenciesList.last),
-                  value: currenciesList.last,
-                )
+                ...genereteCurrencyMenu(),
               ],
               onChanged: (value) {
                 setState(() {
@@ -76,5 +69,14 @@ class _PriceScreenState extends State<PriceScreen> {
     );
   }
 
-
+  List<Widget> genereteCurrencyMenu() {
+    List<Widget> menu = [];
+    currenciesList.forEach((currency) {
+      menu.add(DropdownMenuItem(
+        child: Text(currency),
+        value: currency,
+      ));
+    });
+    return menu;
+  }
 }

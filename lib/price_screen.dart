@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bitcoin_ticker/coin_data.dart';
 import 'dart:io' show Platform;
 
+import 'package:flutter_bitcoin_ticker/service/network_helper.dart';
+
 class PriceScreen extends StatefulWidget {
   @override
   _PriceScreenState createState() => _PriceScreenState();
@@ -10,12 +12,24 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency;
+  String price;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    selectedCurrency = currenciesList.first;
+    selectedCurrency = 'USD';
+    price = '?';
+    getBTCPrice();
+  }
+
+  Future<void> getBTCPrice() async {
+    var btcValue = await NetworkHelper(cryptoName: 'BTC', fiatName: 'USD')
+        .getCryptoToFiatValue();
+    setState(() {
+      price = btcValue['last'].toString();
+      print(price);
+    });
   }
 
   @override
@@ -39,7 +53,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? $selectedCurrency',
+                  '1 BTC = $price $selectedCurrency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,

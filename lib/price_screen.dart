@@ -12,23 +12,24 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency;
-  String price;
+  String priceBTC;
+  String btcKey = 'BTC';
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    selectedCurrency = 'USD';
-    price = '?';
-    getBTCPrice();
+    selectedCurrency = currenciesList.first;
+    priceBTC = '?';
+    getPrice(btcKey, selectedCurrency);
   }
 
-  Future<void> getBTCPrice() async {
-    var btcValue = await NetworkHelper(cryptoName: 'BTC', fiatName: 'USD')
+  Future<void> getPrice(String crypto, String fiat) async {
+    var btcValue = await NetworkHelper(cryptoName: btcKey, fiatName: fiat)
         .getCryptoToFiatValue();
     setState(() {
-      price = btcValue['last'].toString();
-      print(price);
+      priceBTC = btcValue['last'].toString();
+      print(priceBTC);
     });
   }
 
@@ -53,7 +54,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = $price $selectedCurrency',
+                  '1 BTC = $priceBTC $selectedCurrency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
@@ -74,6 +75,14 @@ class _PriceScreenState extends State<PriceScreen> {
     );
   }
 
+  void loadNewOne(String selectedNewCurrency) {
+    setState(() {
+      priceBTC = '?';
+      selectedCurrency = selectedNewCurrency;
+    });
+    getPrice(btcKey, selectedCurrency);
+  }
+
   Widget getPicker() {
     if (Platform.isIOS) {
       return iOSPicker();
@@ -88,9 +97,7 @@ class _PriceScreenState extends State<PriceScreen> {
         value: selectedCurrency,
         items: genereteCurrencyMenu(),
         onChanged: (value) {
-          setState(() {
-            selectedCurrency = value;
-          });
+          loadNewOne(value);
         },
       ),
     );
@@ -112,9 +119,7 @@ class _PriceScreenState extends State<PriceScreen> {
       backgroundColor: Colors.blue,
       itemExtent: 32.0,
       onSelectedItemChanged: (selectedIndex) {
-        setState(() {
-          selectedCurrency = currenciesList[selectedIndex];
-        });
+        loadNewOne(currenciesList[selectedIndex]);
       },
       children: genereteCurrencyMenuIos(),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bitcoin_ticker/coin_data.dart';
+import 'package:flutter_bitcoin_ticker/crypto_model.dart';
+import 'package:flutter_bitcoin_ticker/global/price_of_crypto_widget.dart';
 import 'dart:io' show Platform;
 
 import 'package:flutter_bitcoin_ticker/service/network_helper.dart';
@@ -14,14 +16,16 @@ class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency;
   String priceBTC;
   String btcKey = 'BTC';
+  bool _loadCryptodata = true;
+  List<Widget> currencyList = [];
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     selectedCurrency = currenciesList.first;
-    priceBTC = '?';
-    getPrice(btcKey, selectedCurrency);
+
+    generateListOfCryptoPrice();
   }
 
   Future<void> getPrice(String crypto, String fiat) async {
@@ -29,7 +33,6 @@ class _PriceScreenState extends State<PriceScreen> {
         .getCryptoToFiatValue();
     setState(() {
       priceBTC = btcValue['last'].toString();
-      print(priceBTC);
     });
   }
 
@@ -43,27 +46,12 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $priceBTC $selectedCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
+          _loadCryptodata
+              ? Center(child: CircularProgressIndicator())
+              : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: currencyList,
                 ),
-              ),
-            ),
-          ),
           Container(
               height: 150.0,
               alignment: Alignment.center,
@@ -75,18 +63,17 @@ class _PriceScreenState extends State<PriceScreen> {
     );
   }
 
-  void loadNewOne(String selectedNewCurrency) {
-    setState(() {
-      priceBTC = '?';
-      selectedCurrency = selectedNewCurrency;
-    });
-    getPrice(btcKey, selectedCurrency);
+  Future<void> loadNewOne(String selectedNewCurrency) async {
+    priceBTC = '?';
+    selectedCurrency = selectedNewCurrency;
+
+    await generateListOfCryptoPrice();
   }
 
   Widget getPicker() {
-    if (Platform.isIOS) {
+    if (Platform.isAndroid) {
       return iOSPicker();
-    } else if (Platform.isAndroid) {
+    } else if (Platform.isIOS) {
       return getDropDownButtons();
     }
   }
@@ -121,6 +108,7 @@ class _PriceScreenState extends State<PriceScreen> {
       onSelectedItemChanged: (selectedIndex) {
         loadNewOne(currenciesList[selectedIndex]);
       },
+
       children: genereteCurrencyMenuIos(),
     );
   }
@@ -129,12 +117,39 @@ class _PriceScreenState extends State<PriceScreen> {
     List<Widget> menu = [];
     currenciesList.forEach((currency) {
       menu.add(Container(
-        child: Text(
-          currency,
-          style: TextStyle(color: Colors.white),
+        child: Center(
+          child: Text(
+            currency,
+            style: TextStyle(color: Colors.white),
+          ),
         ),
       ));
     });
     return menu;
+  }
+
+  Future generateListOfCryptoPrice() async {
+    setState(() {
+      _loadCryptodata = true;
+    });
+    currencyList = [];
+
+     cryptoList.forEach((value) async {
+      var price =
+          await NetworkHelper(cryptoName: value, fiatName: selectedCurrency)
+              .getCryptoToFiatValue();
+
+      CryptoPriceModel cryptoPriceModel = CryptoPriceModel(
+          fiatName: selectedCurrency,
+          cryptoName: value,
+          priceValue: price['last'].toString());
+      setState(() {
+        _loadCryptodata = false;
+        currencyList.add(PriceOfCryptoWidget(
+          cryptoPriceModel: cryptoPriceModel,
+        ));
+      });
+
+    });
   }
 }

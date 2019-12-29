@@ -14,7 +14,7 @@ class NetworkHelper {
   Future getCryptoToFiatValue() async {
     url = kBaseCryptoUrl + '$cryptoName$fiatName';
     http.Response response = await http.get(url);
-    print(response);
+
     if (response.statusCode == 200) {
       var decodedData = response.body;
 
